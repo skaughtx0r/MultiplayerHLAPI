@@ -158,7 +158,7 @@ namespace UnityEngine.Networking
                 return m_AssetId;
             }
         }
-        internal void SetDynamicAssetId(NetworkHash128 newAssetId)
+        public void SetDynamicAssetId(NetworkHash128 newAssetId)
         {
             if (!m_AssetId.IsValid() || m_AssetId.Equals(newAssetId))
             {
@@ -394,19 +394,22 @@ namespace UnityEngine.Networking
 
         void SetupIDs()
         {
-            GameObject prefab;
-            if (ThisIsAPrefab())
+            if (!Application.isPlaying)
             {
-                ForceSceneId(0);
-                AssignAssetID(gameObject);
-            }
-            else if (ThisIsASceneObjectWithThatReferencesPrefabAsset(out prefab))
-            {
-                AssignAssetID(prefab);
-            }
-            else
-            {
-                m_AssetId.Reset();
+                GameObject prefab;
+                if (ThisIsAPrefab())
+                {
+                    ForceSceneId(0);
+                    AssignAssetID(gameObject);
+                }
+                else if (ThisIsASceneObjectWithThatReferencesPrefabAsset(out prefab))
+                {
+                    AssignAssetID(prefab);
+                }
+                else
+                {
+                    m_AssetId.Reset();
+                }
             }
         }
 
