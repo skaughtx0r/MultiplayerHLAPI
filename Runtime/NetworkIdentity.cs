@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using UnityEngine.Networking.NetworkSystem;
-using UnityEditor.Experimental.SceneManagement;
 
 #if UNITY_EDITOR
 using UnityEditor;
+using UnityEditor.Experimental.SceneManagement;
 #endif
 
 namespace UnityEngine.Networking
