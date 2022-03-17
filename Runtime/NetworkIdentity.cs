@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using UnityEngine.Networking.NetworkSystem;
+using UnityEditor.Experimental.SceneManagement;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -370,12 +371,30 @@ namespace UnityEngine.Networking
         void AssignAssetID(GameObject prefab)
         {
             string path = AssetDatabase.GetAssetPath(prefab);
-            m_AssetId = NetworkHash128.Parse(AssetDatabase.AssetPathToGUID(path));
+            if (path == "")
+            {
+                var prefabStage = PrefabStageUtility.GetCurrentPrefabStage();
+                path = prefabStage?.prefabAssetPath;
+            }
+            if (path != null && path != "")
+            {
+                m_AssetId = NetworkHash128.Parse(AssetDatabase.AssetPathToGUID(path));
+            }
         }
 
         bool ThisIsAPrefab()
         {
-            return PrefabUtility.IsPartOfPrefabAsset(gameObject);
+            var prefabStage = PrefabStageUtility.GetCurrentPrefabStage();
+            bool isPartOfPrefabContents = false;
+            if (prefabStage)
+            {
+                try
+                {
+                    isPartOfPrefabContents = prefabStage.IsPartOfPrefabContents(gameObject);
+                }
+                catch (Exception e) { }
+            }
+            return PrefabUtility.IsPartOfPrefabAsset(gameObject) || isPartOfPrefabContents;
         }
 
         bool ThisIsASceneObjectWithThatReferencesPrefabAsset(out GameObject prefab)
