@@ -373,8 +373,15 @@ namespace UnityEngine.Networking
             string path = AssetDatabase.GetAssetPath(prefab);
             if (path == "")
             {
-                var prefabStage = PrefabStageUtility.GetCurrentPrefabStage();
-                path = prefabStage?.prefabAssetPath;
+                try
+                {
+                    var prefabStage = PrefabStageUtility.GetCurrentPrefabStage();
+                    if (prefabStage && prefabStage.IsPartOfPrefabContents(prefab))
+                    {
+                        path = prefabStage?.prefabAssetPath;
+                    }
+                }
+                catch (Exception e) { }
             }
             if (path != null && path != "")
             {
