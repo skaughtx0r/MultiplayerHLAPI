@@ -5,7 +5,7 @@ using UnityEngine.Networking.NetworkSystem;
 
 #if UNITY_EDITOR
 using UnityEditor;
-using UnityEditor.Experimental.SceneManagement;
+
 #endif
 
 namespace UnityEngine.Networking
@@ -375,8 +375,8 @@ namespace UnityEngine.Networking
             {
                 try
                 {
-                    var prefabStage = PrefabStageUtility.GetCurrentPrefabStage();
-                    if (prefabStage && prefabStage.IsPartOfPrefabContents(prefab))
+                    var prefabStage = UnityEditor.SceneManagement.PrefabStageUtility.GetCurrentPrefabStage();
+                    if (prefabStage != null && prefabStage.IsPartOfPrefabContents(prefab))
                     {
                         path = prefabStage?.prefabAssetPath;
                     }
@@ -391,9 +391,9 @@ namespace UnityEngine.Networking
 
         bool ThisIsAPrefab()
         {
-            var prefabStage = PrefabStageUtility.GetCurrentPrefabStage();
+            var prefabStage = UnityEditor.SceneManagement.PrefabStageUtility.GetCurrentPrefabStage();
             bool isPartOfPrefabContents = false;
-            if (prefabStage)
+            if (prefabStage != null)
             {
                 try
                 {

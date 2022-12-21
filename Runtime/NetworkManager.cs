@@ -184,7 +184,7 @@ namespace UnityEngine.Networking
         ///        //Change the Player Spawn Method to be Round Robin (spawn at the spawn points in order)
         ///        playerSpawnMethod = PlayerSpawnMethod.RoundRobin;
         ///    }
-        ///
+        ///    
         ///    void Update()
         ///    {
         ///        //Press the space key to switch the spawn method
@@ -1421,11 +1421,11 @@ namespace UnityEngine.Networking
         /// //Attach this script to your GameObject.
         /// //Attach a NetworkManagerHUD to your by clicking Add Component in the Inspector window of the GameObject. Then go to Network>NetworkManagerHUD.
         /// //Create a Text GameObject and attach it to the Text field in the Inspector.
-        ///
+        /// 
         /// using UnityEngine;
         /// using UnityEngine.Networking;
         /// using UnityEngine.UI;
-        ///
+        /// 
         /// public class Example : NetworkManager
         /// {
         ///    //Assign a Text component in the GameObject's Inspector
@@ -1437,7 +1437,7 @@ namespace UnityEngine.Networking
         ///        //Change the text to show the connection
         ///        m_Text.text = "Client " + connection.connectionId + " Connected!";
         ///    }
-        ///
+        /// 
         ///    //Detect when a client disconnects from the Server
         ///    public override void OnServerDisconnect(NetworkConnection connection)
         ///    {

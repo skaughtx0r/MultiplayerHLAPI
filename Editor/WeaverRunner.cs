@@ -1,7 +1,9 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Unity.EditorCoroutines.Editor;
 using UnityEditor.Compilation;
 using UnityEngine;
 using Assembly = System.Reflection.Assembly;
@@ -13,11 +15,42 @@ namespace UnityEditor.Networking
         [InitializeOnLoadMethod]
         static void OnInitializeOnLoad()
         {
-            CompilationPipeline.assemblyCompilationFinished += OnCompilationFinished;
+            CompilationPipeline.assemblyCompilationFinished += LaunchDelayedCompilationFinished;
+        }
+
+        static bool running = false;
+
+        static void LaunchDelayedCompilationFinished(string targetAssembly, CompilerMessage[] messages)
+        {
+            Debug.Log("LaunchDelayedCompilationFinished");
+            if (!running)
+            {
+                running = true;
+                bool success = false;
+                while (!success)
+                {
+                    try
+                    {
+                        Debug.Log("Loop Weaver");
+                        OnCompilationFinished(targetAssembly, messages);
+                        success = true;
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogError(e);
+                    }
+                    if (!success)
+                    {
+                        Debug.LogError("Weaver failed, retrying.");
+                    }
+                }
+                running = false;
+            }
         }
 
         internal static void OnCompilationFinished(string targetAssembly, CompilerMessage[] messages)
         {
+            Debug.Log("Start OnCompilationFinished");
             const string k_HlapiRuntimeAssemblyName = "com.unity.multiplayer-hlapi.Runtime";
 
             // Do nothing if there were compile errors on the target

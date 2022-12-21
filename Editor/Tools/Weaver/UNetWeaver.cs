@@ -300,7 +300,13 @@ namespace Unity.UNetWeaver
             if (lists.writeFuncs.ContainsKey(variable.FullName))
             {
                 var foundFunc = lists.writeFuncs[variable.FullName];
-                if (foundFunc.Parameters[0].ParameterType.IsArray == variable.IsArray)
+
+                // In write functions the variable is always going to be the last param
+                // in the case of places where you have a NetworkWriter involved we should
+                // be checking the second param not the first;
+                var paramIndex = foundFunc.Parameters.Count - 1;
+
+                if (paramIndex >= 0 && foundFunc.Parameters[paramIndex].ParameterType.IsArray == variable.IsArray)
                 {
                     return foundFunc;
                 }
@@ -1145,8 +1151,13 @@ namespace Unity.UNetWeaver
             return true;
         }
 
-        public MethodReference ResolveMethod(TypeReference t, string name)
+        public MethodReference ResolveMethod(TypeReference t, string name, Func<MethodDefinition, bool> methodSelectionCondition = null)
         {
+            Func<MethodDefinition, bool> condition =
+                methodSelectionCondition != null
+                    ? new Func<MethodDefinition, bool>(m => m.Name == name && methodSelectionCondition(m))
+                    : m => m.Name == name;
+            
             //Console.WriteLine("ResolveMethod " + t.ToString () + " " + name);
             if (t == null)
             {
@@ -1154,13 +1165,13 @@ namespace Unity.UNetWeaver
                 fail = true;
                 return null;
             }
-            foreach (var methodRef in t.Resolve().Methods)
+
+            MethodDefinition methodDefinition = t.Resolve().Methods.FirstOrDefault(condition);
+            if (methodDefinition != null)
             {
-                if (methodRef.Name == name)
-                {
-                    return m_ScriptDef.MainModule.ImportReference(methodRef);
-                }
+                return m_ScriptDef.MainModule.ImportReference(methodDefinition);
             }
+
             Log.Error("ResolveMethod failed " + t.Name + "::" + name + " " + t.Resolve());
 
             // why did it fail!?
@@ -1449,8 +1460,8 @@ namespace Unity.UNetWeaver
             registerSyncListDelegateReference = ResolveMethod(NetworkBehaviourType, "RegisterSyncListDelegate");
             getTypeReference = ResolveMethod(objectType, "GetType");
             getTypeFromHandleReference = ResolveMethod(typeType, "GetTypeFromHandle");
-            logErrorReference = ResolveMethod(m_UnityAssemblyDefinition.MainModule.GetType("UnityEngine.Debug"), "LogError");
-            logWarningReference = ResolveMethod(m_UnityAssemblyDefinition.MainModule.GetType("UnityEngine.Debug"), "LogWarning");
+            logErrorReference = ResolveMethod(m_UnityAssemblyDefinition.MainModule.GetType("UnityEngine.Debug"), "LogError", m => m.Parameters.Count == 1);
+            logWarningReference = ResolveMethod(m_UnityAssemblyDefinition.MainModule.GetType("UnityEngine.Debug"), "LogWarning", m => m.Parameters.Count == 1);
             sendCommandInternal = ResolveMethod(NetworkBehaviourType, "SendCommandInternal");
             sendRpcInternal = ResolveMethod(NetworkBehaviourType, "SendRPCInternal");
             sendTargetRpcInternal = ResolveMethod(NetworkBehaviourType, "SendTargetRPCInternal");
@@ -1761,6 +1772,8 @@ namespace Unity.UNetWeaver
         {
             var readParams = Helpers.ReaderParameters(assName, dependencies, assemblyResolver, unityEngineDLLPath, unityUNetDLLPath);
 
+            Console.WriteLine(assName);
+
             string pdbToDelete = null;
             using (m_UnityAssemblyDefinition = AssemblyDefinition.ReadAssembly(unityEngineDLLPath))
             using (m_ScriptDef = AssemblyDefinition.ReadAssembly(assName, readParams))
@@ -1888,9 +1901,21 @@ namespace Unity.UNetWeaver
             {
                 foreach (string ass in assemblies)
                 {
-                    if (!Weave(ass, dependencies, assemblyResolver, unityEngineDLLPath, unityUNetDLLPath, outputDir))
+                    bool weaved = false;
+                    while (!weaved)
                     {
-                        return false;
+                        try
+                        {
+                            if (!Weave(ass, dependencies, assemblyResolver, unityEngineDLLPath, unityUNetDLLPath, outputDir))
+                            {
+                                return false;
+                            }
+                            weaved = true;
+                        }
+                        catch (Exception e)
+                        {
+                            weaved = false;
+                        }
                     }
                 }
             }
