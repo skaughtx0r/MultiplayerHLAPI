@@ -360,7 +360,7 @@ namespace UnityEditor
                     return AssetDatabase.LoadAssetAtPath(editorScene.path, typeof(SceneAsset)) as SceneAsset;
                 }
             }
-            if (LogFilter.logWarn) { Debug.LogWarning("Scene [" + sceneObjectName + "] cannot be used with networking. Add this scene to the 'Scenes in the Build' in build settings."); }
+            // if (LogFilter.logWarn) { Debug.LogWarning("Scene [" + sceneObjectName + "] cannot be used with networking. Add this scene to the 'Scenes in the Build' in build settings."); }
             return null;
         }
 
@@ -432,8 +432,8 @@ namespace UnityEditor
             if (newOnlineScene == null)
             {
                 var prop = serializedObject.FindProperty("m_OnlineScene");
-                prop.stringValue = "";
-                EditorUtility.SetDirty(target);
+                prop.stringValue = m_NetworkManager.onlineScene;
+                // EditorUtility.SetDirty(target);
             }
             else
             {
